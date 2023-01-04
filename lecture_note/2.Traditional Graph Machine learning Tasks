@@ -1,0 +1,178 @@
+# Traditional Graph Machine learning Tasks
+
+* Need to design features for node/edge/graphs
+  * Obtain features from training data, which is full graph
+  * Random Forest / SVM / Neural Network ect...
+
+
+
+### Goal : Make predictions for set of object(node / edge / (sub)graph)
+
+* Design choice
+  * Features : N-dimentional vector
+  * Object : node, edge, (sub)graph
+* Given G = (V, E),
+  Learn a function F: V → R
+
+
+
+## 1. Node-level prediction
+
+### Goal : Characterize structure and position of node in graph
+
+* Possible features would be
+  * Node degree
+  * Node centrality
+  * Cluster coefficient
+  * Graphlets
+
+#### Node degree
+
+* The degree $k_v$ of node $v$ is the number of edges (neighboring nodes) the node has.
+  * Treats all neighboring nodes equally, which means it is forced to **predict same value**
+  * Simple node degree does not capture their importance in graph.
+  * So it comes second concept **Centrality**
+
+--------
+
+### Node Centrality
+
+* Node Centrality $c_v$ takes the node importance in a graph into account
+* Eigenvector / Betweeness / Closeness Centrality and others.
+
+
+
+#### Eigenvector Centrality
+
+Node $v$ is important if **Surrounded by important neighboring nodes** $u ∈ N(v)$.
+
+Eigenvector centrality of node $v$ is **the sum of the centrality of nighboring nodes**.
+$$
+c_v = \frac1𝛌 \sum_{u∈N(v)}c_u
+\\
+\text{𝛌 is\ normalization\ constant,\ also\ a\ largest\ eigenvalue\ of\ A}
+$$
+We can write (1) into recursive equation in matrix form
+$$
+\lambda c\ =\ Ac \label{eq1}
+$$
+
+$$
+\notag
+\text{A : Adjecency matrix,}\ \ A_{uv} = 1\ if\ u\in N(v)\\
+c : \text{Centrality vector}\\ 
+\lambda: \text{Eigenvalue}
+$$
+
+We see that EC $c$ is the eigenvector of $A$, and largest eigenvalue $\lambda_{max}$ is always positive and unique.
+the eigenvector $c_{max}$ corresponding to $\lambda_{max}$ is used for centrality.
+
+
+
+#### Betweeness centrality
+
+Node $v$ is important **if it lies on many shortest paths between other nodes**
+$$
+\notag
+c_v = \sum_{s\neq v \neq t}\frac{\# \text{ of shortest paht between s and t that contains v}}{\# \text{ of shortest paths between s and t}}
+$$
+
+
+<img src="/Users/jojuhyeon/Library/Application Support/typora-user-images/image-20230102132007851.png" alt="image-20230102132007851" style="zoom:35%;" />
+
+> pic from Jure Leskovec, Stanford CS224W: Machine Learning  with Graphs, http://cs224w.stanford.edu
+
+
+
+#### Closeness centrality
+
+A node is important **if it has small shortest pathe length to all other nodes**.
+$$
+\notag
+c_v = \frac{1}{\sum_{u\neq v}\text{ shortest path length between u and v}}
+$$
+The more central the node is, the more close to other nodes. Which means it is more important!
+
+
+
+<img src="/Users/jojuhyeon/Library/Application Support/typora-user-images/image-20230102132327876.png" alt="image-20230102132327876" style="zoom:45%;" />
+
+>  pic from Jure Leskovec, Stanford CS224W: Machine Learning  with Graphs, http://cs224w.stanford.edu
+
+-------
+
+### Clustering Coefficient
+
+It measures how connected $v$'s neighboring nodes are 
+$$
+\notag
+e_v = \frac{\#\text{ of edges among neighboring nodes}}{k_v\choose2} \in [0, 1]
+$$
+Result of (1), $e_v$ is bounded between 0 and 1.
+
+<img src="/Users/jojuhyeon/Library/Application Support/typora-user-images/image-20230102132909808.png" alt="image-20230102132909808" style="zoom:45%;" />
+
+> pic from Jure Leskovec, Stanford CS224W: Machine Learning  with Graphs, http://cs224w.stanford.edu
+
+------
+
+### Graphlets
+
+From Clustering Coefficient, we can count number of triangles in the ego-network (network induced by node and its neighbors). 
+
+##### Triangle example
+
+<img src="/Users/jojuhyeon/Library/Application Support/typora-user-images/image-20230103021324003.png" alt="image-20230103021324003" style="zoom:25%;" />
+
+We can generalize such examples by counting number of pre-specified subgraph, i.e. **graphlets**.
+
+Now our goal is **to describe network structure around $u$ with graphlets**. Again, graphlets are small subgraphs that describe the structure of node $u$'s neighboring network. 
+If we use graphs using 2-5 nodes, we get total 73 of different graphlets. We than can use **vector of 73 coordinates**, which is signature of node that discribes the topology. of node's neighborhood. 73 different graphlets will be shown later. 
+This **graphlet degree vector** provides a measure of **node's local network topoogy**. Comparing vectors of two nodes provides more detailed information of local topological similarity than node degree or clustering coefficient.
+
+To understand how graphlets are produced, we need to know 2 concept about graph. Each are **induced subgraph** and **graph isomophism**
+
+
+
+**Induced Subgraph** is another graph, formed from a subset of vertices and *all* of the edges connecting the vertices in that subset.
+<img src="/Users/jojuhyeon/Library/Application Support/typora-user-images/image-20230103022717574.png" alt="image-20230103022717574" style="zoom:30%;" />
+
+We use graph above to explain concept of induced subgraph. If we were to find induced subgraph of vertice $u, B$ and $C$,  induced subgraph will be graph that contains 3 vertices, $u, B$ and $C$ with 3 edges connecting them, so to say as figure below.
+
+<img src="/Users/jojuhyeon/Library/Application Support/typora-user-images/image-20230103023012246.png" alt="image-20230103023012246" style="zoom:30%;" /> 
+
+
+
+Two graphs which contain the same number of nodes connected in the same way are to said to be **Isomorphic**. For example, two graph below is isomorphic.
+<img src="/Users/jojuhyeon/Library/Application Support/typora-user-images/image-20230103023200076.png" alt="image-20230103023200076" style="zoom:40%;" />
+
+Node mapping of two graphs is (e2, c2), (e1, c5), (e5, c3), (e4, c1), (e3, c4) and (e2, c2) again. However below are not isomorphic i.e. Non-Isomorphic.
+<img src="/Users/jojuhyeon/Library/Application Support/typora-user-images/image-20230103023415544.png" alt="image-20230103023415544" style="zoom:40%;" /> 
+
+Right graph has cycle of length 3, but not in left one. So the graphs cannot be isomorphic
+
+
+
+So back to **graphlets**, the definition is **rooted connected induced non-isomorphic subgraphs**. Rooted means that for each nodes, they have fixed position. I mentioned before with 2 - 3 nodes, there is 73 different graphlets, and below there are all graphlets that comes out of it.
+<img src="https://www.researchgate.net/profile/Oemer-Yaveroglu-2/publication/262690282/figure/fig1/AS:614182361763865@1523443894882/All-2-3-4-and-5-node-graphlets-G-0-G-1-G-29-and-their-automorphism.png" alt="All 2-, 3-, 4-and 5-node graphlets, G 0 , G 1 , ..., G 29 , and their automorphism orbits, 0, 1, 2, ..., 72. (Pržulj 2007) " style="zoom:70%;" />
+
+As you can see there is position number for each nodes, which is rooted.<img src="/Users/jojuhyeon/Library/Application Support/typora-user-images/image-20230103024022591.png" alt="image-20230103024022591" style="zoom:50%;" />
+
+So for this graph, graphlet of node $u$ has graphlet of 0, 1, 2, 3, 5, 10... and so for.
+
+Now we can use this graphlet count as **Graphlet Degree Vector(GDV)**, a count vector of graphlet rooted at given node. Example fallows,
+
+<img src="/Users/jojuhyeon/Library/Application Support/typora-user-images/image-20230103024256933.png" alt="image-20230103024256933" style="zoom:25%;" /> 
+
+
+
+
+
+
+
+## 2. Link(edge)-level prediction
+
+
+
+## 3. Graph-level prediction
+
