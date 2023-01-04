@@ -1,0 +1,422 @@
+# Traditional Graph Machine learning Tasks
+
+* Need to design features for node/edge/graphs
+  * Obtain features from training data, which is full graph
+  * Random Forest / SVM / Neural Network ect...
+
+
+
+### Goal : Make predictions for set of object(node / edge / (sub)graph)
+
+* Design choice
+  * Features : N-dimentional vector
+  * Object : node, edge, (sub)graph
+* Given G = (V, E),
+  Learn a function F: V → R
+
+
+
+## 1. Node-level prediction
+
+### Goal : Characterize structure and position of node in graph
+
+* Possible features would be
+  * Node degree
+  * Node centrality
+  * Cluster coefficient
+  * Graphlets
+
+#### Node degree
+
+* The degree $k_v$ of node $v$ is the number of edges (neighboring nodes) the node has.
+  * Treats all neighboring nodes equally, which means it is forced to **predict same value**
+  * Simple node degree does not capture their importance in graph.
+  * So it comes second concept **Centrality**
+
+--------
+
+### Node Centrality
+
+* Node Centrality $c_v$ takes the node importance in a graph into account
+* Eigenvector / Betweeness / Closeness Centrality and others.
+
+
+
+#### Eigenvector Centrality
+
+Node $v$ is important if **Surrounded by important neighboring nodes** $u ∈ N(v)$.
+
+Eigenvector centrality of node $v$ is **the sum of the centrality of nighboring nodes**.
+
+$$c_v = \frac1𝛌 \sum_{u∈N(v)}c_u$$
+
+$$\text{𝛌 is\ normalization\ constant,\ also\ a\ largest\ eigenvalue\ of\ A}$$
+
+We can write (1) into recursive equation in matrix form
+
+$$\lambda c\ =\ Ac \label{eq1}$$
+
+$$\text{A : Adjecency matrix,}\ \ A_{uv} = 1\ if\ u\in N(v)\\$$
+
+$$c : \text{Centrality vector}$$
+
+$$\lambda: \text{Eigenvalue}$$
+
+We see that EC $c$ is the eigenvector of $A$, and largest eigenvalue $\lambda_{max}$ is always positive and unique.
+the eigenvector $c_{max}$ corresponding to $\lambda_{max}$ is used for centrality.
+
+
+
+#### Betweeness centrality
+
+Node $v$ is important **if it lies on many shortest paths between other nodes**
+$$c_v = \sum_{s\neq v \neq t}\frac{\text{number of shortest paht between s and t that contains v}}{\text{number of shortest paths between s and t}}$$
+
+<img width="636" alt="BTW cnetrality" src="https://user-images.githubusercontent.com/84625523/210504271-46bc980c-2584-4734-86a5-353bdef92e0c.png">
+
+> pic from Jure Leskovec, Stanford CS224W: Machine Learning  with Graphs, http://cs224w.stanford.edu
+
+
+
+#### Closeness centrality
+
+A node is important **if it has small shortest pathe length to all other nodes**.
+$$c_v = \frac{1}{\sum_{u\neq v}\text{ shortest path length between u and v}}$$
+The more central the node is, the more close to other nodes. Which means it is more important!
+
+
+
+<img width="650" alt="closeness centrality" src="https://user-images.githubusercontent.com/84625523/210504190-826faf25-13f0-4754-91d7-c730b0d1149c.png">
+
+>  pic from Jure Leskovec, Stanford CS224W: Machine Learning  with Graphs, http://cs224w.stanford.edu
+
+-------
+
+### Clustering Coefficient
+
+It measures how connected $v$'s neighboring nodes are 
+$$e_v = \frac{\text{number of edges among neighboring nodes}}{k_v\choose2} \in [0, 1]$$
+Result of (1), $e_v$ is bounded between 0 and 1.
+
+<img width="652" alt="clustering coeeficient" src="https://user-images.githubusercontent.com/84625523/210504351-91d0201b-63a4-401a-ba33-f43416370113.png">
+
+> pic from Jure Leskovec, Stanford CS224W: Machine Learning  with Graphs, http://cs224w.stanford.edu
+
+------
+
+### Graphlets
+
+From Clustering Coefficient, we can count number of triangles in the ego-network (network induced by node and its neighbors). 
+
+##### Triangle example
+
+<img width="612" alt="graphlet triangle" src="https://user-images.githubusercontent.com/84625523/210504399-23dd013e-14e7-424c-b8af-eae466144b8d.png">
+
+We can generalize such examples by counting number of pre-specified subgraph, i.e. **graphlets**.
+
+Now our goal is **to describe network structure around $u$ with graphlets**. Again, graphlets are small subgraphs that describe the structure of node $u$'s neighboring network. 
+If we use graphs using 2-5 nodes, we get total 73 of different graphlets. We than can use **vector of 73 coordinates**, which is signature of node that discribes the topology. of node's neighborhood. 73 different graphlets will be shown later. 
+This **graphlet degree vector** provides a measure of **node's local network topoogy**. Comparing vectors of two nodes provides more detailed information of local topological similarity than node degree or clustering coefficient.
+
+To understand how graphlets are produced, we need to know 2 concept about graph. Each are **induced subgraph** and **graph isomophism**
+
+
+
+**Induced Subgraph** is another graph, formed from a subset of vertices and *all* of the edges connecting the vertices in that subset.
+<img width="186" alt="induced_1" src="https://user-images.githubusercontent.com/84625523/210504460-3e5f6637-666b-4d47-b6ca-56d1906ffd5b.png"> 
+
+We use graph above to explain concept of induced subgraph. If we were to find induced subgraph of vertice $u, B$ and $C$,  induced subgraph will be graph that contains 3 vertices, $u, B$ and $C$ with 3 edges connecting them, so to say as figure below.
+
+<img width="388" alt="induced_2" src="https://user-images.githubusercontent.com/84625523/210504521-9d3c1c67-9358-4080-a081-c9cc563c5390.png">  
+
+
+
+Two graphs which contain the same number of nodes connected in the same way are to said to be **Isomorphic**. For example, two graph below is isomorphic.
+<img width="197" alt="iso" src="https://user-images.githubusercontent.com/84625523/210504594-bffb9c37-e491-403f-88b3-fb12147690eb.png" style="zoom:180%;" > 
+
+Node mapping of two graphs is (e2, c2), (e1, c5), (e5, c3), (e4, c1), (e3, c4) and (e2, c2) again. However below are not isomorphic i.e. Non-Isomorphic.
+
+<img width="262" alt="image" src="https://user-images.githubusercontent.com/84625523/210504670-fe9c84bc-1e82-4567-badc-cca5aa890796.png" style="zoom:150%;" > 
+
+Right graph has cycle of length 3, but not in left one. So the graphs cannot be isomorphic
+
+
+
+So back to **graphlets**, the definition is **rooted connected induced non-isomorphic subgraphs**. Rooted means that for each nodes, they have fixed position. I mentioned before with 2 - 3 nodes, there is 73 different graphlets, and below there are all graphlets that comes out of it.
+<img src="https://user-images.githubusercontent.com/84625523/210504771-e8703043-de97-4e91-b8a3-493c8d3170a5.png" alt="image" style="zoom:70%;" />
+
+As you can see there is position number for each nodes, which is rooted.<img width="186" alt="induced_1" src="https://user-images.githubusercontent.com/84625523/210504460-3e5f6637-666b-4d47-b6ca-56d1906ffd5b.png" style="zoom:150%;" >
+
+So for this graph, graphlet of node $u$ has graphlet of 0, 1, 2, 3, 5, 10... and so for.
+
+Now we can use this graphlet count as **Graphlet Degree Vector(GDV)**, a count vector of graphlet rooted at given node. Example fallows,
+
+<img width="841" alt="image" src="https://user-images.githubusercontent.com/84625523/210504902-ebe8f9ff-1b94-4ea5-bdaa-1e0666788808.png">
+
+
+
+## 2. Link(edge)-level prediction
+
+Link level task is to predict **new links** based on the existing links.
+
+The key is to **design features for a pair of nodes**!! But how do you predict edge that wasn't 'there' at the first time?
+There is 2 formulations of the link prediction task.
+
+### Link prediction as a Task
+
+**Links missing at Random**, and **Links over time**
+
+* Missing links at random
+  * You remove a random set of links and then aim to predict them.
+  * Can say you are masking edges.
+* Links over time
+  * Literally links(edges) are produced as time flows.
+  * Given $G[t_0, t'_0]$ a graph defined by edges up to time $t'_0$, ouput a ranked list $L$ of edges (not in $G[t_0, t'_0]$) that are prdicted to appear in time $G[t_1, t'_1]$. 
+  * Evaluation: 
+    * $n = |E_{new}|$ : number of new edges that appear during the test period $G[t_1, t'_1]$.
+    * Take top $n$ element of $L$ and count correct edges
+
+-------
+
+### Link Prediction via Proximity
+
+1. For each pair of nodes $(x, y)$, compute score of $c(x, y)$.
+   * For example, $c(x, y)$ could be the number of common neighbors of $x$ and $y$.
+2. Sort pares of $(x, y)$ by the decreasing score $c(x, y)$.
+3. Predict top $n$ pairs as new links
+4. See which of these links acutally appear in $G[t_1, t'_1]$ 
+
+
+
+But what feautre do we use to predict? there are 3 different link-level feautres.
+
+1. Distance-based feature
+2. Local neighborhood overlap
+3. Global neighborhodd overlap
+
+-----
+
+### Distance-Based Features
+
+#### Shortest-path distance between two nodes!
+
+<img width="1085" alt="image" src="https://user-images.githubusercontent.com/84625523/210513863-9db3fb9c-b6ca-451e-a75f-b487ea5ff7fe.png" style="zoom:80%;" >
+
+Problem of this feature is that it does not capture the degree of neighborhood overlap, strength of connection. What it means is that node pair $(B, H)$ has 2 shared neighboring nodes, while $(B, E)\text{ and } (A, B)$ has only one of such node.
+
+-------
+
+### Local Neighboring Overlap
+
+#### Captures the number of nodes sharing between two nodes $v_1$ and $v_2$
+
+<img width="568" alt="image" src="https://user-images.githubusercontent.com/84625523/210514657-2ffb9514-042d-4abb-85f2-2923c66d562a.png" style="zoom:80%;" >
+
+In Graph above, common neighbor of node $A$ and $B$  is $C$, so it would be 1. There is two different index that make use of this feature. Those are **Jaccard's coefficient** and **Adamic-Adar index**
+
+#### Jaccard's coefficient
+
+$$\frac{|N(v_1)\cup N(v_2)|}{|N(v_1)\cap N(v_2)|}$$
+
+Jaccard coefficient of node $A$ and $B$ is $\frac{|\{C\}|}{|\{C, D\}|} = \frac{1}{2}$.
+
+The reason why we divide with $|N(v_1)\cap N(v_2)|$ is to normalize. The more neighbor that node has the bigger the coefficient gets.
+
+#### Adamic-Adar index
+
+$$\sum_{u\in N(v_1)\cup N(v_2)}\frac{1}{log(k_u)}$$
+
+
+
+### Problem with Local Neighboring Overlap
+
+* If there is no common node between 2 nodes, the metric is always **Zero**.
+  * But, even there is no connection now, it may still potentially be connected in future.
+* **Global Neighboring Overlap** resolves the limitation by considering the entire graph.
+
+-----
+
+### Global Neighboring Overlap
+
+#### Katz index
+
+* Count the number of walks of all length between a given pair of nodes.
+  * We can calculate by using **Powers of the graph adjacency matrix**!!
+
+#### Powers of Adj Matrices
+
+**Show $P^{(K)} = A^K$**
+
+1. $A_uv = 1 \text{ if } u \in N(v)$
+
+2. Let $P^{(K)}_{uv} = \text{number of walks of lenth K between } u \text{ and } v$
+
+3. $P^{(1)}_{uv} = (\text{number of walks of lenth 1 between } u \text{ and } v) = A_{uv}$
+
+4. Compute $P^{(2)}_{uv}$
+
+   1. Compute #walks of length 1, between each $u$'s neighbor and $v$
+   2. Sum up these #walks across $u$'s neighbors
+
+   \>  $P^{(2)}_{uv} = \sum_i{A_{u_i} \times P^{(1)}_{iv}} = \sum_i A_{ui} \times A_{iv} = A^2_{uv}$
+
+
+
+<img width="1179" alt="image" src="https://user-images.githubusercontent.com/84625523/210518231-7b79ef20-cbc2-4b17-915b-2a6dc39373f8.png" style="zoom:67%;" >
+
+
+
+So with the powers of adj matrices, we can calculate #walks of length $l$, so to say $A^l_{uv}$ specifies number of walks of length $l$!!
+
+
+
+Again for Katz index we should calculate number of walks of **all length** between a given pair of nodes, and equation fallows
+$$S_{v_1v_2} = \sum^\infty_{l=1}\beta^lA^l_{v_1v_2}$$
+
+$$0 < \beta < 1 : \text{discount factor}$$
+Using geometric series of matrices, it can be computed in closed-form:
+$$S = \sum_{i=1}^\infty \beta^iA^i = (I - \beta A)^{-1} - I$$
+
+
+## 3. Graph-level prediction
+
+Now last but not least, Graph-Level Feature!
+
+The **goal** here is features that characterize the structure of an **entire graph**. Mostly we use **Kernel Methods**
+
+
+
+### Kernel Methods
+
+The main idea is to design **Kernels instead of feature vector**.
+
+#### Quick Introduction to Kernels
+
+1. Kernel $K(G, G')\in \R $ measures similarity between data.
+2. Kernel matrix $K = (K(G, G')_{G, G'})$ must be positive semidefinite
+   * So it should have positive eigenvectors and symmetric
+3. There exists a feature representation $\phi(\cdot)$ such that $K(G, G') = \phi(G)^T \phi(G')$
+4. Once the kernel is defined, off-the-shelf ML models can be used to make prediction
+   * Kernel SVM for example.
+
+
+
+### Graph Kernels
+
+Graph kernels meausres similarity between two graphs.
+
+The **Goal** here is to **Design graph feature vector $\phi(G)$**.
+
+And the **Key Idea** is **Bag-of-Words (BoW)** for a graph.
+
+-----
+
+#### Quick recall of BoW
+
+1. Bow simply uses the word counts as feature of document.
+   * No ordering considered
+2. Naive extension to a graph : **Regard nodes as words**
+
+<img width="524" alt="image" src="https://user-images.githubusercontent.com/84625523/210521289-fbbafd3d-01b7-4b1a-b1c6-c69bcf8ca718.png">
+
+Since 2 different(for example) graphs have **4 red nodes**, we get the same feature vector for two different graphs.
+
+-------
+
+
+
+#### Graphlet kernel and Weisfeiler-Lehman Kernel use Bag-of-* representation!
+
+For example, what would happen if we use **Bag-of-Node Degree**?
+
+
+
+<img width="1161" alt="image" src="https://user-images.githubusercontent.com/84625523/210521776-b796fedc-273c-457c-a0f5-a0b6184325cd.png">
+
+* Count degree of node, and use degree of node as feature of graph.
+
+
+
+### 1. Graphlet Kernel
+
+Key Idea here is to count the number of different graphlet in a graph.
+
+
+
+#### Different definition of graphlet
+
+* Nodes in graphlets in Graphlet Kernel **does not have to be connected**
+  * It allows for isolated nodes
+* The graphlets here are not rooted
+  * It does not count for each node, but as a whole topology of graph
+
+* For example...
+
+<img width="1126" alt="image" src="https://user-images.githubusercontent.com/84625523/210522350-e5457dea-557e-4bb6-a015-469f81170d8d.png" style="zoom:50%;" >
+
+
+
+#### So, Calculate
+
+Given graph $G$, and a graphlet list $\mathcal{G}_k = (g_1, g_2, ... , g_{n_k}) $, define the graphlet count vector $f_G \in \R^{n_k}$ as
+$$(f_G)_i = \text{number of }(g_i \subseteq G) \text{ for } i = 1, 2, 3, \ldots,n_k$$
+
+
+<img width="1149" alt="image" src="https://user-images.githubusercontent.com/84625523/210523198-5f19d2c2-79da-4515-9aef-9d4e23fb62c4.png" style="zoom:67%;" >
+
+
+
+Given two graphs, $G$ and $G'$, the graphlet kernel is computed as
+$$K(G, G') = f_G^Tf_{G'}$$
+
+
+But it has one problem that if $G$ and $G'$ have different size, that will greatly skew the value. One of the solution is to normalize each feature vector. 
+$$h_G = \frac{f_G}{Sum(f_G)},\ \  K(G, G') = h_G^Th_{G'}$$
+
+
+#### Limitation : Too expensive!!
+
+* time for counting size-$k$ graphlets for a graph size $n$ is $n^k$!
+  * It is unavoidable, because **subgraph isomorphism test is NP-hard**
+* Although graph's node degree is bounded by $d$, and it is reduced to $O(nd^{k-1})$.
+
+
+
+Is there any other way to design more efficient graph kernel??
+
+
+
+
+
+### Weisfeiler-Lehman Kernel
+
+* Use neighborhodd structure to iteratively enrich node vocabulary!
+  * Generalized version of **Bag of node degree**, because node degree is one-hop neighborhood information
+  * It is acheived by **Color refinement**
+
+
+
+#### Color refinement
+
+**Given** : A graph $G$ with a set of nodes $V$.
+
+1. Assign an initial color $c^{(0)}(v)$ to each node $v$.
+
+2. Iteratively refine node colors by
+
+   $c^{(k+1)}(v) = \text{HASH}(\{ c^{(k)}(v),\ \{ c^{(k)}(u) \}_{u \in N(v)} \})$
+
+   Where HASH maps different inputs to different colors
+
+3. After $K$ steps of color refinement, **$c^{(K)}(v)$ summarizes the structure of $K$-hop neighborhodd**
+
+
+
+#### Time complexity
+
+* Computationally efficient
+  * Time complexity is linear in number of edges.
+* When computing kernel value, only colors appeared in the two graphs need to be tracked
+  * Thus, number of colors is at most the total number of nodes
+* Counting colors takes linear time with respect to number of nodes.
+* **Total time complexity is linear in number of edges**
