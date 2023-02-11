@@ -22,6 +22,13 @@ Lets get started!!
 
 * Embedding a whole (sub)graph
   * Learning embedding of anonymous walk.
+  
+  
+[4-1. PageRank](https://github.com/Cho-Jh98/GNN_StanfordCS224W/blob/master/lecture_note/4-1.%20PageRank%2C%20Random%20Walks%20and%20Embeddings.md)
+
+[4-2. Random Walk with Restart and Personalized PageRank](https://github.com/Cho-Jh98/GNN_StanfordCS224W/blob/master/lecture_note/4-2.%20Random%20Walk%20with%20restart%2C%20and%20Personalized%20PageRank.md)
+
+[4-3. Node Embedding](https://github.com/Cho-Jh98/GNN_StanfordCS224W/blob/master/lecture_note/4-3.%20Node%20Embedding.md)
 
 
 
